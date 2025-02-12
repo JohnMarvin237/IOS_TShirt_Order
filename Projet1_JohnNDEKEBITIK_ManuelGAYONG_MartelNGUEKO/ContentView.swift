@@ -2,59 +2,123 @@
 //  ContentView.swift
 //  Projet1_JohnNDEKEBITIK_ManuelGAYONG_MartelNGUEKO
 //
-//  Created by John Marvin NDEKEBITIK HELIANG on 2025-02-10.
+// Created by John Marvin NDEKEBITIK HELIANG (2722513 - Groupe 0040) - Manuel Luther WONDA GAYONG LONKENG (2722618 - Groupe 0040) - Martel NGUEKO WOLACHE (2718241 - Groupe 0040) on 2025-02-10.
 //
 
 import SwiftUI
 import SwiftData
 
 struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
-
+    @State private var title: String = "Personnalise ton T-shirt !"
+    @State private var tshirtSize: CGFloat = 100
+    @State private var selectedColor: Color = .blue
+    @State private var selectedColorName: String = "Bleu"
+    @State private var selectedEmoji: String = "smiley.fill"
+    @State private var selectedEmojiColor: Color = .yellow
+    @State private var selectedEmojiColorName: String = "Jaune"
+    @State private var showConfirmation = false
+    
+    let colors: [(Color, String)] = [(Color.black, "Noir"), (Color.red, "Rouge"), (Color.blue, "Bleu"), (Color.green, "Vert"), (Color.yellow, "Jaune"), (Color.purple, "Violet")]
+    let emojis = ["smiley.fill", "star.fill", "heart.fill", "leaf.fill"]
+    
+    var sizeLabel: String {
+            switch tshirtSize {
+            case 50:
+                return "Petit"
+            case 100:
+                return "Moyen"
+            case 150:
+                return "Grand"
+            default:
+                return ""
+            }
+        }
+    
     var body: some View {
-        NavigationSplitView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                    } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
+        VStack(spacing: 20) {
+            Text(title)
+                .font(.title)
+                .bold()
+                .foregroundColor(.blue)
+                
+            ZStack {
+                Image(systemName:"tshirt.fill")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: tshirtSize * 2, height: tshirtSize * 2)
+                    .foregroundColor(selectedColor)
+                    
+                
+                Image(systemName: selectedEmoji)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: tshirtSize / 2, height: tshirtSize / 2)
+                    .foregroundColor(selectedEmojiColor)
+            }
+            
+            Stepper("Taille :  \(sizeLabel)", value: $tshirtSize, in: 50...150, step: 50)
+            
+            HStack{
+                Text("Couleur du T-shirt")
+                Spacer()
+                Picker("Couleur du T-Shirt", selection: $selectedColorName) {
+                    ForEach(colors, id: \.1) { color, name in
+                        Text(name).tag(name)
                     }
                 }
-                .onDelete(perform: deleteItems)
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
+                .pickerStyle(MenuPickerStyle())
+                .onChange(of: selectedColorName) { newValue in
+                    selectedColor = colors.first(where: { $0.1 == newValue })?.0 ?? .blue
                 }
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
+            }
+            
+            HStack{
+                Text("Logo du T-shirt")
+                Spacer()
+                Picker("Logo", selection: $selectedEmoji) {
+                    ForEach(emojis, id: \.self) { emoji in
+                        Image(systemName: emoji)
+                    }
+                    
+                }
+                .pickerStyle(MenuPickerStyle())
+            }
+            
+            HStack{
+                Text("Couleur de l'impression")
+                Spacer()
+                Picker("Couleur du Logo", selection: $selectedEmojiColorName) {
+                    ForEach(colors, id: \.1) { color, name in
+                        Text(name).tag(name)
                     }
                 }
+                .pickerStyle(MenuPickerStyle())
+                .onChange(of: selectedEmojiColorName) { newValue in
+                    selectedEmojiColor = colors.first(where: { $0.1 == newValue })?.0 ?? .black
+                }
             }
-        } detail: {
-            Text("Select an item")
-        }
-    }
-
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
-        }
-    }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
+            
+            if showConfirmation {
+                Text("C'est en route ! 🚀")
+                    .foregroundColor(.red)
+                    .bold()
             }
+            
+            
+            Button(showConfirmation ? "👍🏾 Commande" : "Commander" ) {
+                showConfirmation = true
+            }
+            .padding()
+            .frame(maxWidth: .infinity)
+            .background(showConfirmation ? Color.gray : Color.green)
+            .foregroundColor(.white)
+            .cornerRadius(10)
+            .disabled(showConfirmation)
+            .padding(.horizontal, 20)
         }
+        .padding()
     }
 }
-
 #Preview {
     ContentView()
         .modelContainer(for: Item.self, inMemory: true)
