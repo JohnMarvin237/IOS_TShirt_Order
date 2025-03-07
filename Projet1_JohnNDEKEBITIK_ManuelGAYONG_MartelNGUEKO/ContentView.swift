@@ -22,17 +22,17 @@ struct ContentView: View {
     let emojis = ["smiley.fill", "star.fill", "heart.fill", "leaf.fill"]
     
     var sizeLabel: String {
-            switch tshirtSize {
-            case 50:
-                return "Petit"
-            case 100:
-                return "Moyen"
-            case 150:
-                return "Grand"
-            default:
-                return ""
-            }
+        switch tshirtSize {
+        case 50:
+            return "Petit"
+        case 100:
+            return "Moyen"
+        case 150:
+            return "Grand"
+        default:
+            return ""
         }
+    }
     
     var body: some View {
         VStack(spacing: 20) {
@@ -41,6 +41,7 @@ struct ContentView: View {
                 .bold()
                 .foregroundColor(.blue)
                 
+            // L'image du t-shirt ne perturbe pas la mise en page
             ZStack {
                 Image(systemName:"tshirt.fill")
                     .resizable()
@@ -48,77 +49,80 @@ struct ContentView: View {
                     .frame(width: tshirtSize * 2, height: tshirtSize * 2)
                     .foregroundColor(selectedColor)
                     
-                
                 Image(systemName: selectedEmoji)
                     .resizable()
                     .scaledToFit()
                     .frame(width: tshirtSize / 2, height: tshirtSize / 2)
                     .foregroundColor(selectedEmojiColor)
             }
+            .frame(maxWidth: .infinity, maxHeight: 300)  // Fixe la hauteur de la zone contenant le t-shirt
             
             Stepper("Taille :  \(sizeLabel)", value: $tshirtSize, in: 50...150, step: 50)
             
-            HStack{
-                Text("Couleur du T-shirt")
-                Spacer()
-                Picker("Couleur du T-Shirt", selection: $selectedColorName) {
-                    ForEach(colors, id: \.1) { color, name in
-                        Text(name).tag(name)
+            // Les autres éléments de l'interface restent fixes
+            VStack {
+                HStack {
+                    Text("Couleur du T-shirt")
+                    Spacer()
+                    Picker("Couleur du T-Shirt", selection: $selectedColorName) {
+                        ForEach(colors, id: \.1) { color, name in
+                            Text(name).tag(name)
+                        }
+                    }
+                    .pickerStyle(MenuPickerStyle())
+                    .onChange(of: selectedColorName) { newValue in
+                        selectedColor = colors.first(where: { $0.1 == newValue })?.0 ?? .blue
                     }
                 }
-                .pickerStyle(MenuPickerStyle())
-                .onChange(of: selectedColorName) { newValue in
-                    selectedColor = colors.first(where: { $0.1 == newValue })?.0 ?? .blue
-                }
-            }
-            
-            HStack{
-                Text("Logo du T-shirt")
-                Spacer()
-                Picker("Logo", selection: $selectedEmoji) {
-                    ForEach(emojis, id: \.self) { emoji in
-                        Image(systemName: emoji)
+                
+                HStack {
+                    Text("Logo du T-shirt")
+                    Spacer()
+                    Picker("Logo", selection: $selectedEmoji) {
+                        ForEach(emojis, id: \.self) { emoji in
+                            Image(systemName: emoji)
+                        }
                     }
-                    
+                    .pickerStyle(MenuPickerStyle())
                 }
-                .pickerStyle(MenuPickerStyle())
-            }
-            
-            HStack{
-                Text("Couleur de l'impression")
-                Spacer()
-                Picker("Couleur du Logo", selection: $selectedEmojiColorName) {
-                    ForEach(colors, id: \.1) { color, name in
-                        Text(name).tag(name)
+                
+                HStack {
+                    Text("Couleur de l'impression")
+                    Spacer()
+                    Picker("Couleur du Logo", selection: $selectedEmojiColorName) {
+                        ForEach(colors, id: \.1) { color, name in
+                            Text(name).tag(name)
+                        }
+                    }
+                    .pickerStyle(MenuPickerStyle())
+                    .onChange(of: selectedEmojiColorName) { newValue in
+                        selectedEmojiColor = colors.first(where: { $0.1 == newValue })?.0 ?? .black
                     }
                 }
-                .pickerStyle(MenuPickerStyle())
-                .onChange(of: selectedEmojiColorName) { newValue in
-                    selectedEmojiColor = colors.first(where: { $0.1 == newValue })?.0 ?? .black
+                
+                if showConfirmation {
+                    Text("C'est en route ! 🚀")
+                        .foregroundColor(.red)
+                        .bold()
                 }
+                
+                Button(showConfirmation ? "👍🏾 Commande" : "Commander" ) {
+                    showConfirmation = true
+                }
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(showConfirmation ? Color.gray : Color.green)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+                .disabled(showConfirmation)
+                .padding(.horizontal, 20)
             }
-            
-            if showConfirmation {
-                Text("C'est en route ! 🚀")
-                    .foregroundColor(.red)
-                    .bold()
-            }
-            
-            
-            Button(showConfirmation ? "👍🏾 Commande" : "Commander" ) {
-                showConfirmation = true
-            }
-            .padding()
-            .frame(maxWidth: .infinity)
-            .background(showConfirmation ? Color.gray : Color.green)
-            .foregroundColor(.white)
-            .cornerRadius(10)
-            .disabled(showConfirmation)
-            .padding(.horizontal, 20)
+            .padding(.top, 10)
         }
         .padding()
     }
 }
+
 #Preview {
     ContentView()
         .modelContainer(for: Item.self, inMemory: true)
